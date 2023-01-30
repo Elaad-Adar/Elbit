@@ -6,9 +6,9 @@ pipeline {
         string(name: 'DockerHub_pwd', defaultValue: '', description: 'your docker hub password')
         string(name: 'tag', defaultValue: 'latest', description: 'tag you image')
     }
-    environment {
-        dockerhub = credentials('dockerhub')
-    }
+//     environment {
+//         dockerhub = credentials('dockerhub')
+//     }
     stages {
         stage("Clone Repo") {
             steps {
@@ -29,7 +29,7 @@ pipeline {
         stage("Push Docker Image") {
             steps {
                 sh '''
-                docker push elaad5/flask-docker-app:latest
+                docker push ${DockerHub_User}/flask-docker-app:${tag}
                 '''
             }
         }
