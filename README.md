@@ -22,3 +22,9 @@ This jenkins file clones the repo and builds the docker image using the dockerfi
 parameters - all but `DockerHub_pwd` parameter have default values to what I used in the assignment.<br>
 
 ### Jenkinsfile2
+this jenkins file clones the repo and saves a new nginx.conf file with parameters from the user `remote_host` proxy pass to the first container and `remote_addr` request headers a source IP .<br>
+then builds the nginx image and pushes it to docker hub.<br>
+
+### Jenkinsfile3
+this jenkins file runs the container with the nginx image and the first container.<br>
+sends a test request to the nginx container and checks the response.<br>

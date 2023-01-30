@@ -1,0 +1,93 @@
+pipeline {
+    agent any
+     parameters {
+        string(name: 'repoURL', defaultValue: 'https://github.com/Elaad-Adar/Elbit', description: 'Url of the GitHub repository')
+        string(name: 'DockerHub_User', defaultValue: 'elaad5', description: 'your docker hub username')
+        string(name: 'DockerHub_pwd', defaultValue: '', description: 'your docker hub password')
+        string(name: 'tag', defaultValue: 'latest', description: 'tag you image')
+        string(name: 'remote_host', defaultValue: 'http://localhost:5000', description: 'remote host')
+        string(name: 'remote_addr', defaultValue: '192.168.0.1', description: 'remote address')
+    }
+//     environment {
+//         dockerhub = credentials('dockerhub')
+//     }
+    stages {
+        stage("Clone Repo") {
+            steps {
+                script{
+                    git branch: 'main', url: repoURL
+                }
+            }
+        }
+        stage("edit nginx config") {
+            steps {
+                script{
+                dir('Nginx') {
+                    sh 'cat nginx.conf'
+                    writeFile file: 'nginx.conf', text: '''user  nginx;
+                    worker_processes  auto;
+
+                    error_log  /var/log/nginx/error.log notice;
+                    pid        /var/run/nginx.pid;
+
+
+                    events {
+                        worker_connections  1024;
+                    }
+
+
+                    http {
+                        include       /etc/nginx/mime.types;
+                        default_type  application/octet-stream;
+
+                        log_format  main  \'$remote_addr - $remote_user [$time_local] "$request" \'
+                                          \'$status $body_bytes_sent "$http_referer" \'
+                                          \'"$http_user_agent" "$http_x_forwarded_for"\';
+
+                        access_log  /var/log/nginx/access.log  main;
+                        server {
+                          listen 80;
+                          listen [::]:80;
+                          server_name localhost;
+
+                          location /containers {
+                            proxy_pass  ''' + remote_host + '''/containers;
+                            proxy_set_header X-Real-IP ''' + remote_addr + ''';
+                          }
+
+                        }
+
+                        sendfile        on;
+                        #tcp_nopush     on;
+
+                        keepalive_timeout  65;
+
+                        #gzip  on;
+
+                        include /etc/nginx/conf.d/*.conf;
+                    }'''
+                    sh "echo printing new nginx.conf -"
+                    sh 'cat nginx.conf'
+                    }
+                }
+            }
+        }
+        stage("Build Docker Image") {
+            steps {
+                script{
+                    dir('Nginx') {
+                    sh 'docker login -u ${DockerHub_User} -p ${DockerHub_pwd}'
+                    sh 'docker build -t ${DockerHub_User}/my_nginx:${tag} .'
+                    }
+                }
+            }
+        }
+        stage("Push Docker Image") {
+            steps {
+                sh '''
+                docker push ${DockerHub_User}/my_nginx:${tag}
+                '''
+            }
+        }
+    }
+}
