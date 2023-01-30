@@ -12,7 +12,7 @@ there is also a docker-compose file that will run the jenkins container and the 
 Assumptions:
 * I've used parameters to get the docker image name and tag from the user and also the repo to clone.
 * one can also use saved credentials for the user and password (I've created and ==docker access token== instead of password), shown in jenkinsfile1 in commented out code.
-* 
+
 
 
 ## Jenkinsfiles
